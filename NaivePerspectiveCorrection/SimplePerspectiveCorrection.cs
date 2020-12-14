@@ -29,8 +29,7 @@ namespace NaivePerspectiveCorrection
                         var fractionOfProgressAlongLineToTrace = (float)j / lengthOfLineToTrace;
                         var point = GetPointAlongLine(lineToTrace, fractionOfProgressAlongLineToTrace);
                         return GetAverageColour(pixels, point);
-                    })
-                    .ToArray();
+                    });
 
                 sliceRenderer(projection, pixelsOnLine, index);
             }
@@ -89,7 +88,7 @@ namespace NaivePerspectiveCorrection
             }
         }
 
-        private delegate void SliceRenderer(Bitmap image, Color[] pixelsOnLine, int index);
+        private delegate void SliceRenderer(Bitmap image, IEnumerable<Color> pixelsOnLine, int index);
 
         /// <summary>
         /// Depending upon the dimensions of the source area, better results may be achieved by taking slices across the image horizontally or vertically - this method will be responsible for deciding that and returning slice enumerators
@@ -115,11 +114,13 @@ namespace NaivePerspectiveCorrection
                     });
             }
 
-            static void RenderSlice(Bitmap bitmap, Color[] pixelsOnLine, int index)
+            static void RenderSlice(Bitmap bitmap, IEnumerable<Color> pixelsOnLine, int index)
             {
-                using var slice = new Bitmap(1, pixelsOnLine.Length);
-                for (var j = 0; j < pixelsOnLine.Length; j++)
-                    slice.SetPixel(0, j, pixelsOnLine[j]);
+                var pixelsOnLineArray = pixelsOnLine.ToArray();
+
+                using var slice = new Bitmap(1, pixelsOnLineArray.Length);
+                for (var j = 0; j < pixelsOnLineArray.Length; j++)
+                    slice.SetPixel(0, j, pixelsOnLineArray[j]);
 
                 using var g = Graphics.FromImage(bitmap);
                 g.DrawImage(

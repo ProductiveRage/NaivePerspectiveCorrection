@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
@@ -8,7 +9,7 @@ namespace NaivePerspectiveCorrection
 {
     internal static class BitmapExtensions
     {
-        public static float[] GetVector(this Bitmap image, double divideDimensionsBy = 8, double blockSizeFractionToMove = 0.25)
+        public static ImmutableArray<float> GetVector(this Bitmap image, double divideDimensionsBy = 8, double blockSizeFractionToMove = 0.25)
         {
             return image
                 .GetGreyscale()
@@ -32,7 +33,7 @@ namespace NaivePerspectiveCorrection
                 )
                 .Enumerate()
                 .Select(pointAndValue => pointAndValue.Value)
-                .ToArray();
+                .ToImmutableArray();
         }
 
         /// <summary>
