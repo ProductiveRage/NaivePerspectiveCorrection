@@ -29,17 +29,24 @@ namespace NaivePerspectiveCorrection
                 .BlockOut(
                     blockSize: (int)Math.Round(Math.Min(image.Width / divideDimensionsBy, image.Height / divideDimensionsBy)),
                     blockSizeFractionToMove,
-                    reducer: block => (float)block.Aggregate(seed: (RunningAverage: 0d, NumberOfValuesAveraged: (uint)0), Average).RunningAverage
+                    reducer: Average
                 )
                 .Enumerate()
                 .Select(pointAndValue => pointAndValue.Value)
                 .ToImmutableArray();
-
-            static (double RunningAverage, uint NumberOfValuesAveraged) Average((double RunningAverage, uint NumberOfValuesAveraged) acc, double value)
+            
+            static float Average(DataRectangle<double> block)
             {
-                var newNumberOfValuesAveraged = acc.NumberOfValuesAveraged + 1;
-                var newRunningAverage = ((acc.RunningAverage * acc.NumberOfValuesAveraged) + value) / newNumberOfValuesAveraged;
-                return (newRunningAverage, newNumberOfValuesAveraged);
+                var (runningAverage, _) = block.Aggregate(
+                    seed: (0d, (uint)0),
+                    ((double RunningAverage, uint NumberOfValuesAveraged) acc, double value) =>
+                    {
+                        var newNumberOfValuesAveraged = acc.NumberOfValuesAveraged + 1;
+                        var newRunningAverage = ((acc.RunningAverage * acc.NumberOfValuesAveraged) + value) / newNumberOfValuesAveraged;
+                        return (newRunningAverage, newNumberOfValuesAveraged);
+                    }
+                );
+                return (float)runningAverage;
             }
         }
 
