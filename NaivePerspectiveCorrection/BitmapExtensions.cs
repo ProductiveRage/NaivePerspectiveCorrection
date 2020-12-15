@@ -29,23 +29,25 @@ namespace NaivePerspectiveCorrection
                 .BlockOut(
                     blockSize: (int)Math.Round(Math.Min(image.Width / divideDimensionsBy, image.Height / divideDimensionsBy)),
                     blockSizeFractionToMove,
-                    reducer: block => (float)block.Enumerate().Average(pointAndValue => pointAndValue.Value)
+                    reducer: block => (float)block.Aggregate(seed: (RunningAverage: 0d, NumberOfValuesAveraged: (uint)0), Average).RunningAverage
                 )
                 .Enumerate()
                 .Select(pointAndValue => pointAndValue.Value)
                 .ToImmutableArray();
+
+            static (double RunningAverage, uint NumberOfValuesAveraged) Average((double RunningAverage, uint NumberOfValuesAveraged) acc, double value)
+            {
+                var newNumberOfValuesAveraged = acc.NumberOfValuesAveraged + 1;
+                var newRunningAverage = ((acc.RunningAverage * acc.NumberOfValuesAveraged) + value) / newNumberOfValuesAveraged;
+                return (newRunningAverage, newNumberOfValuesAveraged);
+            }
         }
 
         /// <summary>
         /// This will return values in the range 0-255 (inclusive)
         /// </summary>
         // Based on http://stackoverflow.com/a/4748383/3813189
-        public static DataRectangle<double> GetGreyscale(this Bitmap image)
-        {
-            return image
-                .GetAllPixels()
-                .Transform(c => (0.2989 * c.R) + (0.5870 * c.G) + (0.1140 * c.B));
-        }
+        public static DataRectangle<double> GetGreyscale(this Bitmap image) => image.GetAllPixels().Transform(c => (0.2989 * c.R) + (0.5870 * c.G) + (0.1140 * c.B));
 
         public static DataRectangle<Color> GetAllPixels(this Bitmap image)
         {

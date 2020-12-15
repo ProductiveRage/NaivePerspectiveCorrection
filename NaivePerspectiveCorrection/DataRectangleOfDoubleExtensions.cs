@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System;
 
 namespace NaivePerspectiveCorrection
 {
@@ -9,12 +9,14 @@ namespace NaivePerspectiveCorrection
         /// </summary>
         public static DataRectangle<double> Normalise(this DataRectangle<double> source)
         {
-            var minValue = source.Enumerate().Min(pointAndValue => pointAndValue.Value);
-            var maxValue = source.Enumerate().Max(pointAndValue => pointAndValue.Value);
+            var (minValue, maxValue) = source.Aggregate(
+                seed: (Min: double.MaxValue, Max: double.MinValue),
+                func: (acc, value) => (Math.Min(value, acc.Min), Math.Max(value, acc.Max))
+            );
             var range = maxValue - minValue;
             return range > 0
                 ? source.Transform(value => (value - minValue) / range)
-                : source;
+                : source.Transform(value => 0d);
         }
     }
 }

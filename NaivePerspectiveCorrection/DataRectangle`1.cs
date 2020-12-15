@@ -64,7 +64,17 @@ namespace NaivePerspectiveCorrection
             }
         }
 
-        public IEnumerable<(Point Point, T Value)> Enumerate(Func<Point, T, bool>? optionalFilter = null)
+        public TAccumulate Aggregate<TAccumulate>(TAccumulate seed, Func<TAccumulate, T, TAccumulate> func)
+        {
+            for (var x = _window.Left; x < _window.Right; x++)
+            {
+                for (var y = _window.Top; y < _window.Bottom; y++)
+                    seed = func(seed, _protectedValues[x, y]);
+            }
+            return seed;
+        }
+
+        public IEnumerable<(Point Point, T Value)> Enumerate()
         {
             for (var x = _window.Left; x < _window.Right; x++)
             {
@@ -72,8 +82,7 @@ namespace NaivePerspectiveCorrection
                 {
                     var value = _protectedValues[x, y];
                     var point = new Point(x, y);
-                    if ((optionalFilter == null) || optionalFilter(point, value))
-                        yield return (point, value);
+                    yield return (point, value);
                 }
             }
         }
