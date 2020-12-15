@@ -39,6 +39,8 @@ namespace NaivePerspectiveCorrection
                         using var resizedOriginalSlideImage = new Bitmap(projectionSize.Width, projectionSize.Height);
                         using var g = Graphics.FromImage(resizedOriginalSlideImage);
 
+                        // TODO: The code here presumes that if the slide was cropped out of the frame that it will be the right hand side of it that is cut off, which is correct for my video but that may not always be the case and so
+                        // there should be some logic to try to guess what is most likely to have been cropped off based upon the four points that are known to frame the projected slide in the video
                         g.DrawImage(
                             originalSlideImage,
                             srcRect: new Rectangle(0, 0, widthToCropFromOriginalSlide, originalSlideImage.Height),
