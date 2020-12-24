@@ -9,7 +9,7 @@ namespace NaivePerspectiveCorrection
 {
     internal static class BitmapExtensions
     {
-        public static ImmutableArray<float> GetVector(this Bitmap image, double divideDimensionsBy = 8, double blockSizeFractionToMove = 0.25)
+        public static ImmutableArray<float> GetVector(this Bitmap image, double divideDimensionsBy = 12, double blockSizeFractionToMove = 0.25)
         {
             return image
                 .GetGreyscale()
