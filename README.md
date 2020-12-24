@@ -8,6 +8,6 @@ This doesn't seem to be a common problem with a NuGet-installable-library soluti
 
 If it isn't sufficient then I'll have to dust off the old maths! But if it *is* sufficient then that would be very handy. And, either way, perhaps this will be useful to anyone doing similar and can deal with the approximation of "perspective correction" that this code will produce.
 
-![Example](README Image.jpg)
+![Example](README%20Image.jpg)
 
-![Second (blurrier) example](README Image 2.jpg)
+![Second (blurrier) example](README%20Image%202.jpg)
