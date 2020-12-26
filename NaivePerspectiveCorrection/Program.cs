@@ -25,38 +25,35 @@ namespace NaivePerspectiveCorrection
                 .First()
                 .Area;
 
-            var originalSlideVectors = Lazy(() =>
-            {
-                var projectionSize = SimplePerspectiveCorrection.GetProjectionSize(topLeft, topRight, bottomRight, bottomLeft);
-                return new DirectoryInfo("Slides")
-                    .EnumerateFiles("*.png")
-                    .AsParallel() // Note: This happens within a lock (controlled by the Lazy wrapper), so any AsParallel applied to the outer call will have blocked all but one threads and so we might as well put the cores to use here
-                    .Select(originalSlideImageFile =>
-                    {
-                        using var originalSlideImage = new Bitmap(originalSlideImageFile.FullName);
+            var projectionSize = SimplePerspectiveCorrection.GetProjectionSize(topLeft, topRight, bottomRight, bottomLeft);
+            var originalSlideVectors = new DirectoryInfo("Slides")
+                .EnumerateFiles("*.png")
+                .AsParallel()
+                .Select(originalSlideImageFile =>
+                {
+                    using var originalSlideImage = new Bitmap(originalSlideImageFile.FullName);
 
-                        var projectionRatio = (double)projectionSize.Width / projectionSize.Height;
-                        var widthToCropFromOriginalSlide = (int)Math.Round(originalSlideImage.Height * projectionRatio);
+                    var projectionRatio = (double)projectionSize.Width / projectionSize.Height;
+                    var widthToCropFromOriginalSlide = (int)Math.Round(originalSlideImage.Height * projectionRatio);
 
-                        using var resizedOriginalSlideImage = new Bitmap(projectionSize.Width, projectionSize.Height);
-                        using var g = Graphics.FromImage(resizedOriginalSlideImage);
+                    using var resizedOriginalSlideImage = new Bitmap(projectionSize.Width, projectionSize.Height);
+                    using var g = Graphics.FromImage(resizedOriginalSlideImage);
 
-                        // TODO: The code here presumes that if the slide was cropped out of the frame that it will be the right hand side of it that is cut off, which is correct for my video but that may not always be the case and so
-                        // there should be some logic to try to guess what is most likely to have been cropped off based upon the four points that are known to frame the projected slide in the video
-                        g.DrawImage(
-                            originalSlideImage,
-                            srcRect: new Rectangle(0, 0, widthToCropFromOriginalSlide, originalSlideImage.Height),
-                            destRect: new Rectangle(0, 0, projectionSize.Width, projectionSize.Height),
-                            srcUnit: GraphicsUnit.Pixel
-                        );
+                    // TODO: The code here presumes that if the slide was cropped out of the frame that it will be the right hand side of it that is cut off, which is correct for my video but that may not always be the case and so
+                    // there should be some logic to try to guess what is most likely to have been cropped off based upon the four points that are known to frame the projected slide in the video
+                    g.DrawImage(
+                        originalSlideImage,
+                        srcRect: new Rectangle(0, 0, widthToCropFromOriginalSlide, originalSlideImage.Height),
+                        destRect: new Rectangle(0, 0, projectionSize.Width, projectionSize.Height),
+                        srcUnit: GraphicsUnit.Pixel
+                    );
 
-                        return (
-                            Name: Path.GetFileNameWithoutExtension(originalSlideImageFile.Name),
-                            Vector: resizedOriginalSlideImage.GetVector()
-                        );
-                    })
-                    .ToArray();
-            });
+                    return (
+                        Name: Path.GetFileNameWithoutExtension(originalSlideImageFile.Name),
+                        Vector: resizedOriginalSlideImage.GetVector()
+                    );
+                })
+                .ToArray(); // Cal ToArray to evaluate immediately and not repeat this work each time the originalSlideVectors list is looked at
 
             var closestSlides = files
                 .AsParallel()
@@ -68,7 +65,7 @@ namespace NaivePerspectiveCorrection
 
                     return (
                         Filename: file.Name,
-                        ClosestSlide: originalSlideVectors.Value
+                        ClosestSlide: originalSlideVectors
                             .Select(slide => (slide.Name, Distance: VectorDistanceFunctions.Cosine(projection.GetVector(), slide.Vector)))
                             .OrderBy(slide => slide.Distance)
                             .First()
@@ -83,10 +80,5 @@ namespace NaivePerspectiveCorrection
             Console.WriteLine("Finished! Press [Enter] to terminate.. ");
             Console.ReadLine();
         }
-
-        /// <summary>
-        /// Helper method to leverage compiler type inference
-        /// </summary>
-        private static Lazy<T> Lazy<T>(Func<T> valueFactory) => new Lazy<T>(valueFactory);
     }
 }
