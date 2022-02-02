@@ -10,9 +10,10 @@ namespace NaivePerspectiveCorrection
         /// <summary>
         /// Return the largest bright area of the image - this should be the projected slide in a presentation
         /// </summary>
-        public static (Point TopLeft, Point TopRight, Point BottomRight, Point BottomLeft) GetMostHighlightedArea(Bitmap image)
+        public static (Point TopLeft, Point TopRight, Point BottomRight, Point BottomLeft) GetMostHighlightedArea(Bitmap image, int resizeLargestSideToForProcessing = 400)
         {
-            var greyScaleImageData = image.GetGreyscaleData(resizeIfLargestSideGreaterThan: 200, resizeTo: 200);
+            using var resizedImage = image.CopyAndResize(resizeLargestSideToForProcessing);
+            var greyScaleImageData = resizedImage.GetGreyscale();
 
             var (min, max) = greyScaleImageData.GetMinAndMax();
             var range = max - min;

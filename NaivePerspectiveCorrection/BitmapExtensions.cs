@@ -56,6 +56,15 @@ namespace NaivePerspectiveCorrection
         // Based on http://stackoverflow.com/a/4748383/3813189
         public static DataRectangle<double> GetGreyscale(this Bitmap image) => image.GetAllPixels().Transform(c => (0.2989 * c.R) + (0.5870 * c.G) + (0.1140 * c.B));
 
+        public static Bitmap CopyAndResize(this Bitmap image, int resizeLargestSideTo)
+        {
+            var (width, height) = (image.Width > image.Height)
+                ? (resizeLargestSideTo, (int)((double)image.Height / image.Width * resizeLargestSideTo))
+                : ((int)((double)image.Width / image.Height * resizeLargestSideTo), resizeLargestSideTo);
+
+            return new Bitmap(image, width, height);
+        }
+
         public static DataRectangle<Color> GetAllPixels(this Bitmap image)
         {
             var values = new Color[image.Width, image.Height];
