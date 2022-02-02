@@ -61,20 +61,6 @@ namespace NaivePerspectiveCorrection
             );
         }
 
-        private static DataRectangle<double> GetGreyscaleData(this Bitmap image, int resizeIfLargestSideGreaterThan, int resizeTo)
-        {
-            var largestSide = Math.Max(image.Width, image.Height);
-            if (largestSide <= resizeIfLargestSideGreaterThan)
-                return image.GetGreyscale();
-
-            var (width, height) = (image.Width > image.Height)
-                ? (resizeTo, (int)((double)image.Height / image.Width * resizeTo))
-                : ((int)((double)image.Width / image.Height * resizeTo), resizeTo);
-
-            using var resizedImage = new Bitmap(image, width, height);
-            return resizedImage.GetGreyscale();
-        }
-
         private static IEnumerable<IEnumerable<Point>> GetDistinctObjects(DataRectangle<bool> mask)
         {
             // Flood fill areas in the looks-like-bar-code mask to create distinct areas
