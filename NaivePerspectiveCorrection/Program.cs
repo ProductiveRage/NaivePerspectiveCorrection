@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -12,8 +13,11 @@ namespace NaivePerspectiveCorrection
         {
             // I'm using this code to try to fix blurry slides in a video of a presentation that I gave; I want to match the slide shown in each frame to the original
             // slide images and then overlay the original over the projected slides in the video as they're too blurry to read
-            
+
+            var timer = Stopwatch.StartNew();
+
             // All of the individual frame images should have file names of the format "frame_123.jpg", so search for them and parse out the frame number for each
+            Console.WriteLine($"[{timer.Elapsed.TotalSeconds:0.00}s] Read frames..");
             var frameIndexMatcher = new Regex(@"frame_(\d+)\.jpg", RegexOptions.IgnoreCase);
             var files = new DirectoryInfo("Frames")
                 .EnumerateFiles("*.jpg")
@@ -28,6 +32,7 @@ namespace NaivePerspectiveCorrection
                 .ToArray(); // Call ToArray to evaluate immediately instead of repeating the file system access every time that "files" is enumerated
 
             // Identify the largest bright area in each of the frames..
+            Console.WriteLine($"[{timer.Elapsed.TotalSeconds:0.00}s] Identify highlighted area..");
             var allFrameHighlightedAreas = files
                 .AsParallel()
                 .Select(file =>
@@ -72,6 +77,7 @@ namespace NaivePerspectiveCorrection
 
             // Read in every slide image, crop them to match the aspect ratio / dimensions calculated above and then generate a vector that describes it,
             // based upon how pixels get lighter and darker across the image
+            Console.WriteLine($"[{timer.Elapsed.TotalSeconds:0.00}s] Read slides..");
             var originalSlideVectors = new DirectoryInfo("Slides")
                 .EnumerateFiles("*.png")
                 .AsParallel()
@@ -108,6 +114,7 @@ namespace NaivePerspectiveCorrection
             // slide images - the closer that vectors are to each other, the more similar the images should be that the vectors represent (it's important that
             // the vectors are all the same length and so it's important that all the images are the same size - which they all are, as the slides were cropped
             // and resized to the calculated "projectionSize" above and the frame images will be manipulated into the same size below).
+            Console.WriteLine($"[{timer.Elapsed.TotalSeconds:0.00}s] Match most similar slides to each frame..");
             var closestSlides = files
                 .AsParallel()
                 .Select(file =>
@@ -135,7 +142,11 @@ namespace NaivePerspectiveCorrection
                     }
 
                     return (file.FrameIndex, ClosestSlide: closestSlide);
-                });
+                })
+                .ToArray(); // Call ToArray to perform the above work now, so that the timer value is correct on the logged message below
+
+            Console.WriteLine($"[{timer.Elapsed.TotalSeconds:0.00}s] Complete!");
+            Console.WriteLine();
 
             foreach (var (frameIndex, closestSlide) in closestSlides.OrderBy(entry => entry.FrameIndex))
                 Console.WriteLine($"Frame {frameIndex}: {closestSlide ?? "- No Projection -"}");
