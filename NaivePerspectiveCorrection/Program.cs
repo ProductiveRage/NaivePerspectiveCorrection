@@ -122,8 +122,9 @@ namespace NaivePerspectiveCorrection
                     {
                         using var image = new Bitmap(file.FullName);
                         using var projection = SimplePerspectiveCorrection.ExtractAndPerspectiveCorrect(image, topLeft, topRight, bottomRight, bottomLeft);
+                        var projectionVector = projection.GetVector();
                         closestSlide = originalSlideVectors
-                            .Select(slide => (slide.Name, Distance: VectorDistanceFunctions.Cosine(projection.GetVector(), slide.Vector)))
+                            .Select(slide => (slide.Name, Distance: VectorDistanceFunctions.Cosine(projectionVector, slide.Vector)))
                             .OrderBy(slide => slide.Distance)
                             .First()
                             .Name;
