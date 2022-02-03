@@ -53,7 +53,7 @@ namespace NaivePerspectiveCorrection
         /// <summary>
         /// This will return values in the range 0-255 (inclusive)
         /// </summary>
-        // Based on http://stackoverflow.com/a/4748383/3813189
+        // Inspired by https://stackoverflow.com/q/12201577/3813189
         public static DataRectangle<double> GetGreyscale(this Bitmap image) => image.GetAllPixels().Transform(c => (0.2989 * c.R) + (0.5870 * c.G) + (0.1140 * c.B));
 
         public static Bitmap CopyAndResize(this Bitmap image, int resizeLargestSideTo)
@@ -67,6 +67,7 @@ namespace NaivePerspectiveCorrection
 
         public static DataRectangle<Color> GetAllPixels(this Bitmap image)
         {
+            // Based on http://stackoverflow.com/a/4748383/3813189
             var values = new Color[image.Width, image.Height];
             var data = image.LockBits(
                 new Rectangle(0, 0, image.Width, image.Height),
